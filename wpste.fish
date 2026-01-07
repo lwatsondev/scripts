@@ -73,7 +73,7 @@ function _is_image
 end
 
 function _check_requirements
-    set -f required_commands curl mpv notify-send grimshot wl-copy swappy oxipng xdg-mime
+    set -f required_commands curl mpv notify-send grimshot wl-copy swappy oxipng
 
     if not set -q WAYLAND_DISPLAY
         log_error --exit 1 "WAYLAND_DISPLAY is not set. wpste expects a Wayland environment."
@@ -101,7 +101,7 @@ end
 
 function _take_screenshot
     set -f target $argv[1]
-    set -f save_path (mktemp --tmpdir --suffix=.png wpste_(date --iso-8601).XXXX)
+    set -f save_path (mktemp --tmpdir --suffix=.png XXXXX)
 
     set -f grimshot_output (grimshot save "$target" "$save_path" 2>&1)
     set -f grimshot_status $status
@@ -181,7 +181,7 @@ function _source_config
             "## API key for your pste instance. Required." \
             "# API_KEY=" \
             "## URL to your pste instance's upload endpoint. Optional." \
-            "# UPLOAD_URL=https://pste.pw/api/upload"
+            "# UPLOAD_URL=https://lwatson.dev/f"
 
         log_error "No config file found at $config_file. A default one will be created."
         mkdir -p "$(dirname "$config_file")"; or log_error --exit $status "Failed to create default config file."
@@ -195,7 +195,7 @@ function _source_config
         set -g CONFIG_$item[1] $item[2]
     end
 
-    set -q CONFIG_UPLOAD_URL; or set -g CONFIG_UPLOAD_URL "https://pste.pw/api/upload"
+    set -q CONFIG_UPLOAD_URL; or set -g CONFIG_UPLOAD_URL "https://lwatson.dev/f"
 end
 
 function wpste_main
