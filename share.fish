@@ -1,7 +1,7 @@
 #!/usr/bin/fish
 
 function _notify
-    command -q notify-send; and notify-send --app-name wpste $argv; or true
+    command -q notify-send; and notify-send --app-name share $argv; or true
 end
 
 function _log
@@ -48,7 +48,7 @@ function log_error
 
     _log ERROR $argv
     if set -q __notify_on_error
-        _notify -u critical "wpste encountered an error." "$argv"
+        _notify -u critical "share encountered an error." "$argv"
     end
 
     if set -q _flag_e
@@ -62,7 +62,7 @@ end
 
 function _print_help
     log_info "A simple grimshot wrapper for https://github.com/TheReverend403/pste with support for editing before upload."
-    log_info "Usage: wpste [-t|--target <active|screen|output|area|window>] [-c|--copy] [-n|--notify] [-e|--edit] [file]"
+    log_info "Usage: share [-t|--target <active|screen|output|area|window>] [-c|--copy] [-n|--notify] [-e|--edit] [file]"
     exit 0
 end
 
@@ -76,7 +76,7 @@ function _check_requirements
     set -f required_commands rehome-cli mpv notify-send grimshot wl-copy swappy oxipng
 
     if not set -q WAYLAND_DISPLAY
-        log_error --exit 1 "WAYLAND_DISPLAY is not set. wpste expects a Wayland environment."
+        log_error --exit 1 "WAYLAND_DISPLAY is not set. share expects a Wayland environment."
     end
 
     for requirement in $required_commands
@@ -174,7 +174,7 @@ function _copy_to_clipboard
 end
 
 
-function wpste_main
+function share_main
     _check_requirements
 
     set -f options \
@@ -183,7 +183,7 @@ function wpste_main
         (fish_opt --short n --long notify) \
         (fish_opt --short e --long edit) \
         (fish_opt --short t --long target --required-val)
-    argparse --name=wpste --stop-nonopt $options -- $argv
+    argparse --name=share --stop-nonopt $options -- $argv
     or return
 
     test (count $argv) -eq 1; and set -f _flag_f $argv[1]
@@ -239,4 +239,4 @@ function wpste_main
     echo "$url"
 end
 
-wpste_main $argv
+share_main $argv
