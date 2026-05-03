@@ -73,7 +73,7 @@ function _is_image
 end
 
 function _check_requirements
-    set -f required_commands curl mpv notify-send grimshot wl-copy swappy oxipng
+    set -f required_commands rehome-cli mpv notify-send grimshot wl-copy swappy oxipng
 
     if not set -q WAYLAND_DISPLAY
         log_error --exit 1 "WAYLAND_DISPLAY is not set. wpste expects a Wayland environment."
@@ -122,14 +122,13 @@ end
 
 function _upload_file
     set -f options \
-        (fish_opt --short k --long key --required-val) \
         (fish_opt --short f --long file --required-val)
 
     argparse $options -- $argv
     or return
 
-    if not set -q _flag_k; and not set -q _flag_f
-        log_error --exit 2 "_upload_file: Expected --key and --file."
+    if not set -q _flag_f
+        log_error --exit 2 "_upload_file: Expected --file."
     end
 
     if not test -f "$_flag_f"
@@ -137,11 +136,11 @@ function _upload_file
     end
 
     log_debug "Uploading $_flag_f"
-    set -f response (curl -sSL -H "Authorization: Bearer $_flag_k" -F file="@$_flag_f" "$CONFIG_UPLOAD_URL" 2>&1)
-    set -f curl_status $status
+    set -f url (rehome-cli "$_flag_f")
+    set -f upload_status $status
 
-    test $curl_status -eq 0; or log_error --exit $curl_status "Upload failed: $response"
-    echo "$response" | jq .url --raw-output; or log_error --exit $status "JSON parsing failed: $response"
+    test $upload_status -eq 0; or log_error --exit $upload_status "$url"
+    echo "$url"
 end
 
 function _copy_to_clipboard
@@ -174,33 +173,9 @@ function _copy_to_clipboard
     end
 end
 
-function _source_config
-    set -f config_file "$XDG_CONFIG_HOME/wpste/config"
-    if not test -f "$config_file"
-        set -l default_config \
-            "## API key for your pste instance. Required." \
-            "# API_KEY=" \
-            "## URL to your pste instance's upload endpoint. Optional." \
-            "# UPLOAD_URL=https://lwatson.dev/f"
-
-        log_error "No config file found at $config_file. A default one will be created."
-        mkdir -p "$(dirname "$config_file")"; or log_error --exit $status "Failed to create default config file."
-        echo -e "$(string join '\n' $default_config)" >"$config_file"
-        exit 1
-    end
-
-    for line in (cat "$config_file" | string match -rv "^#")
-        set -l item (string match -r "^\w+=\w+" "$line" | string split -m 1 "="); or continue
-        log_debug "_source_config: CONFIG_$item[1]=$item[2]"
-        set -g CONFIG_$item[1] $item[2]
-    end
-
-    set -q CONFIG_UPLOAD_URL; or set -g CONFIG_UPLOAD_URL "https://lwatson.dev/f"
-end
 
 function wpste_main
     _check_requirements
-    _source_config
 
     set -f options \
         (fish_opt --short h --long help) \
@@ -245,7 +220,7 @@ function wpste_main
         end
     end
 
-    set -f url (_upload_file --file "$_flag_f" --key "$CONFIG_API_KEY")
+    set -f url (_upload_file --file "$_flag_f")
     set url (string replace -r "^http:" "https:" "$url")
 
     if set -q _flag_c
